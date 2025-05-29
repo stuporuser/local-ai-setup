@@ -19,5 +19,5 @@ docker compose --profile gpu-nvidia up
 
 
 
-From [https://github.com/coleam00/ai-agents-masterclass/tree/main/local-ai-packaged], explained at [https://www.youtube.com/watch?v=23s2N3ug8B8].
+From https://github.com/coleam00/ai-agents-masterclass/tree/main/local-ai-packaged, explained at https://www.youtube.com/watch?v=23s2N3ug8B8.
 
