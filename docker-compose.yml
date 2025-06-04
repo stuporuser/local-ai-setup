@@ -54,6 +54,35 @@ services:
       timeout: 5s
       retries: 10
 
+  n8n-import:
+    <<: [*defaults]
+    container_name: ${PROJECT_NAME}_n8n_import
+    image: n8nio/n8n:latest
+    restart: no
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_PERSONALIZATION_ENABLED=false
+      - N8N_ENCRYPTION_KEY
+      - N8N_USER_MANAGEMENT_JWT_SECRET
+    links:
+      - postgres
+    volumes:
+      - scripts:/scripts
+      - uploads:/uploads
+      - persistent_workflows:/persistent_workflows
+      - n8n_storage:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: /bin/sh
+    command:
+      - "-c"
+      - "n8n import:workflow --separate --input=/persistent_workflows"
+
   n8n:
     <<: [*defaults]
     container_name: ${PROJECT_NAME}_n8n
@@ -79,10 +108,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    entrypoint: /bin/sh
-    command:
-      - "-c"
-      - "sh /scripts/n8n_first_run.sh"
+      n8n-import:
+        condition: service_completed_successfully
 
   qdrant:
     <<: [*defaults]
