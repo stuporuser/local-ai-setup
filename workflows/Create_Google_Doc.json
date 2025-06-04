@@ -1,33 +1,39 @@
 {
-  "name": "Post Message to Slack",
+  "name": "Create Google Doc (From external example)",
   "nodes": [
     {
       "parameters": {
-        "authentication": "oAuth2",
-        "select": "channel",
-        "channelId": {
+        "operation": "createFromText",
+        "content": "={{ $json.body.document_text }}",
+        "name": "={{ $json.body.document_title }}",
+        "driveId": {
           "__rl": true,
-          "value": "C083QQBQTAM",
           "mode": "list",
-          "cachedResultName": "flowise-n8n"
+          "value": "My Drive"
         },
-        "text": "={{ $json.body.message }}",
-        "otherOptions": {
-          "includeLinkToWorkflow": false
+        "folderId": {
+          "__rl": true,
+          "value": "1914m3M7kRzkd5RJqAfzRY9EBcJrKemZC",
+          "mode": "list",
+          "cachedResultName": "Meeting Notes",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1914m3M7kRzkd5RJqAfzRY9EBcJrKemZC"
+        },
+        "options": {
+          "convertToGoogleDocument": true
         }
       },
-      "id": "4882859e-bf35-475b-9fd2-a068ac4fc602",
-      "name": "Slack",
-      "type": "n8n-nodes-base.slack",
-      "typeVersion": 2.2,
+      "id": "abb2ee3f-7dd0-4d6e-96f0-6cc91eb64a5e",
+      "name": "Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
       "position": [
         1040,
         360
       ],
       "credentials": {
-        "slackOAuth2Api": {
-          "id": "XtpcBxLD5axuhMm8",
-          "name": "Slack account"
+        "googleDriveOAuth2Api": {
+          "id": "cfNochbuJikPwwl2",
+          "name": "Google Drive account"
         }
       }
     },
@@ -35,7 +41,7 @@
       "parameters": {
         "options": {}
       },
-      "id": "a9e7aa8a-04ba-4dc6-8a14-f2c435df4ad8",
+      "id": "9904e7b7-c9f6-49b5-ab72-6b199c6e2f46",
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
@@ -47,12 +53,12 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "f17f77e5-51dc-4589-8b51-4c8adc23c3c0",
+        "path": "d8db9fa3-04fe-43c8-9acf-e1912463477f",
         "authentication": "headerAuth",
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "db4d3557-e423-43e9-8f0c-b4309f304567",
+      "id": "7e761bed-99f6-4a8a-959b-d1b3542b6071",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
@@ -60,7 +66,7 @@
         820,
         360
       ],
-      "webhookId": "f17f77e5-51dc-4589-8b51-4c8adc23c3c0",
+      "webhookId": "d8db9fa3-04fe-43c8-9acf-e1912463477f",
       "credentials": {
         "httpHeaderAuth": {
           "id": "PGr0hc0kn43Di1sz",
@@ -71,7 +77,7 @@
   ],
   "pinData": {},
   "connections": {
-    "Slack": {
+    "Google Drive": {
       "main": [
         [
           {
@@ -86,7 +92,7 @@
       "main": [
         [
           {
-            "node": "Slack",
+            "node": "Google Drive",
             "type": "main",
             "index": 0
           }
@@ -98,11 +104,11 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "74bd88b9-5eb7-4a1a-8bc3-be2636a3639c",
+  "versionId": "c1f66b1c-c7dc-48ba-9197-6a0e3ac3e8f4",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "620f0d7e3114cb344761d7d45a21ef2a32096f91d8696e7057756042e1999e2c"
   },
-  "id": "dBTFcNDVqjuQ619T",
+  "id": "LYrReDbpmqK3eX2P",
   "tags": []
 }

@@ -176,7 +176,7 @@ cython_debug/
 
 
 # Project-specific dirs and files
-shared/
+uploads/*
 container_dirs/n8n_storage/*
 container_dirs/postgres_storage/*
 container_dirs/ollama_storage/*
@@ -184,6 +184,7 @@ container_dirs/qdrant_storage/*
 container_dirs/open_webui_storage/*
 container_dirs/flowise_storage/*
 
+!uploads/.gitkeep
 !container_dirs/n8n_storage/.gitkeep
 !container_dirs/postgres_storage/.gitkeep
 !container_dirs/ollama_storage/.gitkeep

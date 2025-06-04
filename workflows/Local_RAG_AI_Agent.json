@@ -13,14 +13,14 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "iN7fO2CgatVwq73z",
+          "id": "i1dHjnxCP4oWRVog",
           "name": "Postgres account"
         }
       }
     },
     {
       "parameters": {
-        "model": "llama3.1:latest",
+        "model": "llama3.1:8b-instruct-q4_K_M",
         "options": {}
       },
       "id": "c7632a7c-2661-492e-bd6f-aab994818998",
@@ -33,14 +33,14 @@
       ],
       "credentials": {
         "ollamaApi": {
-          "id": "eOwAotC7AUgJlvHM",
+          "id": "R9DYwZhAnHM3p41y",
           "name": "Ollama account"
         }
       }
     },
     {
       "parameters": {
-        "model": "llama3.1:latest",
+        "model": "gemma3:12b-it-qat",
         "options": {}
       },
       "id": "73d773a4-5c72-4af3-a52d-144f0e417823",
@@ -53,7 +53,7 @@
       ],
       "credentials": {
         "ollamaApi": {
-          "id": "eOwAotC7AUgJlvHM",
+          "id": "R9DYwZhAnHM3p41y",
           "name": "Ollama account"
         }
       }
@@ -74,7 +74,7 @@
     },
     {
       "parameters": {
-        "model": "nomic-embed-text:latest"
+        "model": "nomic-embed-text:137m-v1.5-fp16"
       },
       "id": "3a8e3fa0-3997-4bce-985c-975fb5ad4013",
       "name": "Embeddings Ollama",
@@ -86,78 +86,8 @@
       ],
       "credentials": {
         "ollamaApi": {
-          "id": "eOwAotC7AUgJlvHM",
+          "id": "R9DYwZhAnHM3p41y",
           "name": "Ollama account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "pollTimes": {
-          "item": [
-            {
-              "mode": "everyMinute"
-            }
-          ]
-        },
-        "triggerOn": "specificFolder",
-        "folderToWatch": {
-          "__rl": true,
-          "value": "1914m3M7kRzkd5RJqAfzRY9EBcJrKemZC",
-          "mode": "list",
-          "cachedResultName": "Meeting Notes",
-          "cachedResultUrl": "https://drive.google.com/drive/folders/1914m3M7kRzkd5RJqAfzRY9EBcJrKemZC"
-        },
-        "event": "fileCreated",
-        "options": {}
-      },
-      "id": "41fb71dd-236a-48bc-9761-5841d52ca1b3",
-      "name": "File Created",
-      "type": "n8n-nodes-base.googleDriveTrigger",
-      "typeVersion": 1,
-      "position": [
-        600,
-        880
-      ],
-      "credentials": {
-        "googleDriveOAuth2Api": {
-          "id": "vzcL2pD7uQzqDpdK",
-          "name": "Google Drive account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "pollTimes": {
-          "item": [
-            {
-              "mode": "everyMinute"
-            }
-          ]
-        },
-        "triggerOn": "specificFolder",
-        "folderToWatch": {
-          "__rl": true,
-          "value": "1914m3M7kRzkd5RJqAfzRY9EBcJrKemZC",
-          "mode": "list",
-          "cachedResultName": "Meeting Notes",
-          "cachedResultUrl": "https://drive.google.com/drive/folders/1914m3M7kRzkd5RJqAfzRY9EBcJrKemZC"
-        },
-        "event": "fileUpdated",
-        "options": {}
-      },
-      "id": "7b904686-89ae-4722-9ce5-a9da1b13b1a1",
-      "name": "File Updated",
-      "type": "n8n-nodes-base.googleDriveTrigger",
-      "typeVersion": 1,
-      "position": [
-        600,
-        1100
-      ],
-      "credentials": {
-        "googleDriveOAuth2Api": {
-          "id": "vzcL2pD7uQzqDpdK",
-          "name": "Google Drive account"
         }
       }
     },
@@ -168,13 +98,13 @@
             {
               "id": "10646eae-ae46-4327-a4dc-9987c2d76173",
               "name": "file_id",
-              "value": "={{ $json.id }}",
+              "value": "={{ $json.path }}",
               "type": "string"
             },
             {
               "id": "dd0aa081-79e7-4714-8a67-1e898285554c",
               "name": "folder_id",
-              "value": "={{ $json.parents[0] }}",
+              "value": "={{ $json.event }}",
               "type": "string"
             }
           ]
@@ -186,45 +116,13 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        860,
+        1080,
         880
       ]
     },
     {
       "parameters": {
-        "operation": "download",
-        "fileId": {
-          "__rl": true,
-          "value": "={{ $('Set File ID').item.json.file_id }}",
-          "mode": "id"
-        },
-        "options": {
-          "googleFileConversion": {
-            "conversion": {
-              "docsToFormat": "text/plain"
-            }
-          }
-        }
-      },
-      "id": "9f1e08fb-4ef3-4c4d-9473-5a7a1608b8e3",
-      "name": "Download File",
-      "type": "n8n-nodes-base.googleDrive",
-      "typeVersion": 3,
-      "position": [
-        1300,
-        880
-      ],
-      "executeOnce": true,
-      "credentials": {
-        "googleDriveOAuth2Api": {
-          "id": "vzcL2pD7uQzqDpdK",
-          "name": "Google Drive account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "text",
+        "operation": "pdf",
         "options": {}
       },
       "id": "7efee822-68ad-4fe2-a616-ba19fd127684",
@@ -232,7 +130,7 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
       "position": [
-        1540,
+        1620,
         880
       ],
       "alwaysOutputData": true
@@ -279,7 +177,7 @@
     },
     {
       "parameters": {
-        "model": "nomic-embed-text:latest"
+        "model": "nomic-embed-text:137m-v1.5-fp16"
       },
       "id": "8a04559c-dfe8-479f-8998-a2e9bc994a0a",
       "name": "Embeddings Ollama1",
@@ -291,7 +189,7 @@
       ],
       "credentials": {
         "ollamaApi": {
-          "id": "eOwAotC7AUgJlvHM",
+          "id": "R9DYwZhAnHM3p41y",
           "name": "Ollama account"
         }
       }
@@ -377,7 +275,7 @@
       ],
       "credentials": {
         "qdrantApi": {
-          "id": "VOnegFP8eijBkbNO",
+          "id": "rvDhYnunCLj17eb0",
           "name": "QdrantApi account"
         }
       }
@@ -386,7 +284,7 @@
       "parameters": {
         "code": {
           "execute": {
-            "code": "const { QdrantVectorStore } = require(\"@langchain/qdrant\");\nconst { OllamaEmbeddings } = require(\"@langchain/community/embeddings/ollama\");\n\nconst embeddings = new OllamaEmbeddings({\n  model: \"nomic-embed-text\",\n  baseUrl: \"http://ollama:11434\"\n});\n\nconst vectorStore = await QdrantVectorStore.fromExistingCollection(\n  embeddings,\n  {\n    url: \"http://qdrant:6333\",\n    collectionName: \"documents\",\n  }\n);\n\nconst fileIdToDelete = this.getInputData()[0].json.file_id;\n\nconst filter = {\n        must: [\n            {\n                key: \"metadata.file_id\",\n                match: {\n                    value: fileIdToDelete,\n                },\n            },\n        ],\n    }\n\n// const results = await vectorStore.similaritySearch(\"this\", 10, filter);\n// const idsToDelete = results.map((doc) => doc.id);\n\n// NOT IMPLEMENTED!\n// await vectorStore.delete({ ids: idsToDelete });\n\nvectorStore.client.delete(\"documents\", {\n  filter\n});\n\nreturn [ {json: { file_id: fileIdToDelete } } ];\n"
+            "code": "const { QdrantVectorStore } = require(\"@langchain/qdrant\");\nconst { OllamaEmbeddings } = require(\"@langchain/community/embeddings/ollama\");\n\nconst embeddings = new OllamaEmbeddings({\n  model: \"nomic-embed-text:137m-v1.5-fp16\",\n  baseUrl: \"http://host.docker.internal:11434\"\n});\n\nconst vectorStore = await QdrantVectorStore.fromExistingCollection(\n  embeddings,\n  {\n    url: \"http://host.docker.internal:6333\",\n    collectionName: \"documents\",\n  }\n);\n\nconst fileIdToDelete = this.getInputData()[0].json.file_id;\n\nconst filter = {\n        must: [\n            {\n                key: \"metadata.file_id\",\n                match: {\n                    value: fileIdToDelete,\n                },\n            },\n        ],\n    }\n\n// const results = await vectorStore.similaritySearch(\"this\", 10, filter);\n// const idsToDelete = results.map((doc) => doc.id);\n\n// NOT IMPLEMENTED!\n// await vectorStore.delete({ ids: idsToDelete });\n\nvectorStore.client.delete(\"documents\", {\n  filter\n});\n\nreturn [ {json: { file_id: fileIdToDelete } } ];\n"
           }
         },
         "inputs": {
@@ -410,7 +308,7 @@
       "type": "@n8n/n8n-nodes-langchain.code",
       "typeVersion": 1,
       "position": [
-        1080,
+        1240,
         880
       ],
       "alwaysOutputData": false
@@ -436,7 +334,7 @@
       ],
       "credentials": {
         "qdrantApi": {
-          "id": "VOnegFP8eijBkbNO",
+          "id": "rvDhYnunCLj17eb0",
           "name": "QdrantApi account"
         }
       }
@@ -512,6 +410,47 @@
         820,
         340
       ]
+    },
+    {
+      "parameters": {
+        "triggerOn": "folder",
+        "path": "/tmp/test",
+        "events": [
+          "add",
+          "change",
+          "unlink",
+          "addDir",
+          "unlinkDir"
+        ],
+        "options": {
+          "followSymlinks": true
+        }
+      },
+      "type": "n8n-nodes-base.localFileTrigger",
+      "typeVersion": 1,
+      "position": [
+        740,
+        1180
+      ],
+      "id": "c54d3fe5-77ee-4395-a1c6-2df192a40f2f",
+      "name": "Local File Trigger"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.file_id }}",
+        "options": {
+          "dataPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1420,
+        880
+      ],
+      "id": "a299fbe3-0b6a-4900-9e02-9b452c234c79",
+      "name": "Read/Write Files from Disk",
+      "alwaysOutputData": true
     }
   ],
   "pinData": {},
@@ -560,44 +499,11 @@
         ]
       ]
     },
-    "File Created": {
-      "main": [
-        [
-          {
-            "node": "Set File ID",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "File Updated": {
-      "main": [
-        [
-          {
-            "node": "Set File ID",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Set File ID": {
       "main": [
         [
           {
             "node": "Clear Old Vectors",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Download File": {
-      "main": [
-        [
-          {
-            "node": "Extract Document Text",
             "type": "main",
             "index": 0
           }
@@ -674,7 +580,7 @@
       "main": [
         [
           {
-            "node": "Download File",
+            "node": "Read/Write Files from Disk",
             "type": "main",
             "index": 0
           }
@@ -724,16 +630,38 @@
           }
         ]
       ]
+    },
+    "Local File Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set File ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Extract Document Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "19f9691c-4682-4704-81f2-33fdec9d0be2",
+  "versionId": "cb34ad02-197d-40ed-85b5-6d95707d0474",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "f722e3e1e81e942a38faa434ad0aee8699371bbff9f883b9d5c59a7c726605af"
+    "instanceId": "5ab2721687712f4bf6d70cce0ab508c6d97a82aef9d06428b9319d0f791e2cc5"
   },
   "id": "vTN9y2dLXqTiDfPT",
   "tags": []

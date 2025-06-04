@@ -1,10 +1,30 @@
 # local-ai-setup
 Configs to set up local, containerized AI services on a GPU-powered host
 
+# Background
+
+Aritifical intelligence (AI) as a singular topic comprises many, many different use cases, models, tools, system designs, algorithms, and resulting resource requirements and privacy considerations. Even looking solely at large language models (LLMs), options and use-cases are so numerous that figuring out where and how to start becomes an entry barrier in itself. 
+
+For example:
+- Do data privacy and ownership dictate running the LLM locally, or could you use a cloud option like OpenAI?
+- If running locally, do you prefer a model series (e.g., Gemma, Llama, Phi) or the latest-released version of any LLM available?
+- Does your use-case favor a chat model or one tuned for instruct or reasoning?
+- Will you need an embedding model to support retrieval-augmented generation (RAG)?
+- Is a quantized model with more parameters better, or should you choose a model with fewer parameters?
+- Do you even have a GPU, and what is its VRAM capacity?
+
+...and those questions are just for choosing an LLM that might be able to reference some of your own provided knowledge in text format.
+
+The goal of this project is to make AI environment testing more accessible by reducing mental-load overhead during setup. Mainly, the project provides: 
+- easy ways to spin-up any AI environment I've already had to build for testing
+- environment variables and docker compose instructions that are easily modifiable for new tests while remaining repeatable
+
+
+
 # Requirements
 
 - WSL2
-- Docker
+- Docker Compose
 - [CUDA container toolkit](https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&Distribution=WSL-Ubuntu&target_version=2.0&target_type=deb_local)
 
 # Run the setup

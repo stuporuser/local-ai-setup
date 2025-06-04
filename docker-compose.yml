@@ -1,39 +1,44 @@
+x-defaults: &defaults
+  networks:
+    - project_network
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  restart: unless-stopped
+  
+
 services:
   flowise:
-    container_name: ${PROJECT_NAME}-flowise
+    <<: [*defaults]
+    container_name: ${PROJECT_NAME}_flowise
     image: flowiseai/flowise
-    restart: unless-stopped
-    networks: 
-      - project_network
-    environment:
-        - PORT=3001
+    volumes:
+      - scripts:/scripts
+      - flowise_storage:/root/.flowise
     ports:
         - 3001:3001
-    extra_hosts:
-      - "host.docker.internal:host-gateway"        
-    volumes:
-        - ~/.flowise:/root/.flowise
-    entrypoint: /bin/sh -c "sleep 3; flowise start"
+    environment:
+        - PORT=3001
+    entrypoint: /bin/sh
+    command:
+      - "-c"
+      - "sleep 3; flowise start"
 
   open-webui:
-    container_name: ${PROJECT_NAME}-open-webui
+    <<: [*defaults]
+    container_name: ${PROJECT_NAME}_open_webui
     image: ghcr.io/open-webui/open-webui:main
-    restart: unless-stopped
-    networks:
-      - project_network
-    ports:
-      - "3000:8080"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     volumes:
-      - open-webui:/app/backend/data
+      - scripts:/scripts
+      - open_webui_storage:/app/backend/data
+    ports:
+      - 3000:8080
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
 
   postgres:
-    container_name: ${PROJECT_NAME}-postgres
+    <<: [*defaults]
+    container_name: ${PROJECT_NAME}_postgres
     image: postgres:16-alpine
-    restart: unless-stopped
-    networks:
-      - project_network
     ports:
       - 5432:5432
     environment:
@@ -41,6 +46,7 @@ services:
       - POSTGRES_PASSWORD
       - POSTGRES_DB
     volumes:
+      - scripts:/scripts
       - postgres_storage:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
@@ -48,12 +54,12 @@ services:
       timeout: 5s
       retries: 10
 
-  n8n-import:
-    container_name: ${PROJECT_NAME}-n8n-import
+  n8n:
+    <<: [*defaults]
+    container_name: ${PROJECT_NAME}_n8n
     image: n8nio/n8n:latest
-    restart: no
-    networks:
-      - project_network
+    ports:
+      - 5678:5678
     environment:
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=postgres
@@ -65,78 +71,57 @@ services:
       - N8N_USER_MANAGEMENT_JWT_SECRET
     links:
       - postgres
+    volumes:
+      - scripts:/scripts
+      - uploads:/uploads
+      - workflows:/workflows
+      - n8n_storage:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
     entrypoint: /bin/sh
     command:
       - "-c"
-      - "n8n import:credentials --separate --input=/backup/credentials && n8n import:workflow --separate --input=/backup/workflows"
-    volumes:
-      - ./n8n/backup:/backup
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  n8n:
-    container_name: ${PROJECT_NAME}-n8n
-    image: n8nio/n8n:latest
-    restart: unless-stopped
-    networks:
-      - project_network
-    environment:
-      - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=postgres
-      - DB_POSTGRESDB_USER=${POSTGRES_USER}
-      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
-      - N8N_DIAGNOSTICS_ENABLED=false
-      - N8N_PERSONALIZATION_ENABLED=false
-      - N8N_ENCRYPTION_KEY
-      - N8N_USER_MANAGEMENT_JWT_SECRET
-    links:
-      - postgres
-    ports:
-      - 5678:5678
-    volumes:
-      - n8n_storage:/home/node/.n8n
-      - ./n8n/backup:/backup
-      - ./shared:/data/shared
-    depends_on:
-      postgres:
-        condition: service_healthy
-      n8n-import:
-        condition: service_completed_successfully
+      - "bash /scripts/n8n_first_run.sh"
 
   qdrant:
-    container_name: ${PROJECT_NAME}-qdrant
+    <<: [*defaults]
+    container_name: ${PROJECT_NAME}_qdrant
     image: qdrant/qdrant
-    restart: unless-stopped
-    networks:
-      - project_network
     ports:
       - 6333:6333
     volumes:
+      - scripts:/scripts
       - qdrant_storage:/qdrant/storage
 
   ollama-cpu:
+    <<: [*defaults]
     profiles: ["cpu"]
-    container_name: ${PROJECT_NAME}-ollama
+    container_name: ${PROJECT_NAME}_ollama
     image: ollama/ollama:latest
-    restart: unless-stopped
-    networks:
-      - project_network
     ports:
       - 11434:11434
+    environment:
+      - MODELS_TO_PULL
     volumes:
+      - scripts:/scripts
       - ollama_storage:/root/.ollama
+    entrypoint: /bin/sh
+    command:
+      - "-c"
+      - "bash /scripts/ollama_first_run.sh && ollama serve"
 
   ollama-gpu:
+    <<: [*defaults]
     profiles: ["gpu-nvidia"]
-    container_name: ${PROJECT_NAME}-ollama
+    container_name: ${PROJECT_NAME}_ollama
     image: ollama/ollama:latest
-    restart: unless-stopped
-    networks:
-      - project_network
     ports:
       - 11434:11434
+    environment:
+      - MODELS_TO_PULL
     volumes:
+      - scripts:/scripts
       - ollama_storage:/root/.ollama
     deploy:
       resources:
@@ -145,71 +130,70 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-
-  ollama-pull-llama-cpu:
-    profiles: ["cpu"]
-    container_name: ${PROJECT_NAME}-ollama-pull
-    image: ollama/ollama:latest
-    restart: no
-    networks:
-      - project_network
-    volumes:
-      - ollama_storage:/root/.ollama
     entrypoint: /bin/sh
-    #command:
-      #- "-c"
-      #- "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull llama3.1; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
-    depends_on:
-      - ollama-cpu
-
-  ollama-pull-llama-gpu:
-    profiles: ["gpu-nvidia"]
-    container_name: ${PROJECT_NAME}-ollama-pull
-    image: ollama/ollama:latest
-    restart: no
-    networks:
-      - project_network
-    volumes:
-      - ollama_storage:/root/.ollama
-    entrypoint: /bin/sh
-    #command:
-      #- "-c"
-      #- "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull llama3.1; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
-    depends_on:
-      - ollama-gpu
+    command:
+      - "-c"
+      - "bash /scripts/ollama_first_run.sh && ollama serve"
 
 volumes:
+  uploads:
+    name: ${PROJECT_NAME}_uploads
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./uploads
+  scripts:
+    name: ${PROJECT_NAME}_scripts
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./scripts
+  workflows:
+    name: ${PROJECT_NAME}_workflows
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./workflows
   n8n_storage:
+    name: ${PROJECT_NAME}_n8n_storage
     driver: local
     driver_opts:
       type: none
       o: bind
       device: ./container_dirs/n8n_storage
   postgres_storage:
+    name: ${PROJECT_NAME}_postgres_storage
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: ./container_dirs/postgres_storage
+      device: ./container_dirs/postgres_storage/
   ollama_storage:
+    name: ${PROJECT_NAME}_ollama_storage
     driver: local
     driver_opts:
       type: none
       o: bind
       device: ./container_dirs/ollama_storage
   qdrant_storage:
+    name: ${PROJECT_NAME}_qdrant_storage
     driver: local
     driver_opts:
       type: none
       o: bind
       device: ./container_dirs/qdrant_storage
   open_webui_storage:
+    name: ${PROJECT_NAME}_open_webui_storage
     driver: local
     driver_opts:
       type: none
       o: bind
       device: ./container_dirs/open_webui_storage
   flowise_storage:
+    name: ${PROJECT_NAME}_flowise_storage
     driver: local
     driver_opts:
       type: none
@@ -218,4 +202,4 @@ volumes:
 
 networks:
   project_network:
-    name: ${PROJECT_NAME}-network
+    name: ${PROJECT_NAME}_network

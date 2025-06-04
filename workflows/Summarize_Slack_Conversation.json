@@ -1,5 +1,5 @@
 {
-  "name": "Summarize Slack Conversation",
+  "name": "Summarize Slack Conversation (From external example)",
   "nodes": [
     {
       "parameters": {
