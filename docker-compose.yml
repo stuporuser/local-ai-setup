@@ -82,7 +82,7 @@ services:
     entrypoint: /bin/sh
     command:
       - "-c"
-      - "bash /scripts/n8n_first_run.sh"
+      - "sh /scripts/n8n_first_run.sh"
 
   qdrant:
     <<: [*defaults]
@@ -109,7 +109,7 @@ services:
     entrypoint: /bin/sh
     command:
       - "-c"
-      - "bash /scripts/ollama_first_run.sh && ollama serve"
+      - "sh /scripts/ollama_first_run.sh && ollama serve"
 
   ollama-gpu:
     <<: [*defaults]
@@ -133,7 +133,7 @@ services:
     entrypoint: /bin/sh
     command:
       - "-c"
-      - "bash /scripts/ollama_first_run.sh && ollama serve"
+      - "sh /scripts/ollama_first_run.sh && ollama serve"
 
 volumes:
   uploads:
