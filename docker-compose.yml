@@ -74,7 +74,7 @@ services:
     volumes:
       - scripts:/scripts
       - uploads:/uploads
-      - workflows:/workflows
+      - persistent_workflows:/persistent_workflows
       - n8n_storage:/home/node/.n8n
     depends_on:
       postgres:
@@ -150,13 +150,13 @@ volumes:
       type: none
       o: bind
       device: ./scripts
-  workflows:
-    name: ${PROJECT_NAME}_workflows
+  persistent_workflows:
+    name: ${PROJECT_NAME}_persistent_workflows
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: ./workflows
+      device: ./persistent_workflows
   n8n_storage:
     name: ${PROJECT_NAME}_n8n_storage
     driver: local
