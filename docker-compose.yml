@@ -12,7 +12,6 @@ services:
     container_name: ${PROJECT_NAME}_flowise
     image: flowiseai/flowise
     volumes:
-      - scripts:/scripts
       - flowise_storage:/root/.flowise
     ports:
         - 3001:3001
@@ -28,7 +27,6 @@ services:
     container_name: ${PROJECT_NAME}_open_webui
     image: ghcr.io/open-webui/open-webui:main
     volumes:
-      - scripts:/scripts
       - open_webui_storage:/app/backend/data
     ports:
       - 3000:8080
@@ -46,7 +44,6 @@ services:
       - POSTGRES_PASSWORD
       - POSTGRES_DB
     volumes:
-      - scripts:/scripts
       - postgres_storage:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
@@ -71,7 +68,6 @@ services:
     links:
       - postgres
     volumes:
-      - scripts:/scripts
       - uploads:/uploads
       - persistent_workflows:/persistent_workflows
       - n8n_storage:/home/node/.n8n
@@ -101,7 +97,6 @@ services:
     links:
       - postgres
     volumes:
-      - scripts:/scripts
       - uploads:/uploads
       - persistent_workflows:/persistent_workflows
       - n8n_storage:/home/node/.n8n
@@ -118,7 +113,6 @@ services:
     ports:
       - 6333:6333
     volumes:
-      - scripts:/scripts
       - qdrant_storage:/qdrant/storage
 
   ollama-cpu:
@@ -128,15 +122,8 @@ services:
     image: ollama/ollama:latest
     ports:
       - 11434:11434
-    environment:
-      - MODELS_TO_PULL
     volumes:
-      - scripts:/scripts
       - ollama_storage:/root/.ollama
-    entrypoint: /bin/sh
-    command:
-      - "-c"
-      - "sh /scripts/ollama_first_run.sh && ollama serve"
 
   ollama-gpu:
     <<: [*defaults]
@@ -145,10 +132,7 @@ services:
     image: ollama/ollama:latest
     ports:
       - 11434:11434
-    environment:
-      - MODELS_TO_PULL
     volumes:
-      - scripts:/scripts
       - ollama_storage:/root/.ollama
     deploy:
       resources:
@@ -157,10 +141,40 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+
+  ollama-pull-llama-cpu:
+    <<: [*defaults]
+    profiles: ["cpu"]
+    container_name: ${PROJECT_NAME}_ollama_pull
+    image: ollama/ollama:latest
+    restart: no
+    environment:
+      - MODELS_TO_PULL
+    volumes:
+      - ollama_storage:/root/.ollama
     entrypoint: /bin/sh
     command:
       - "-c"
-      - "sh /scripts/ollama_first_run.sh && ollama serve"
+      - "sleep 3; for MODEL in $(echo $MODELS_TO_PULL | tr ',' ' '); do ollama pull $MODEL; done"
+    depends_on:
+      - ollama-cpu
+
+  ollama-pull-llama-gpu:
+    <<: [*defaults]
+    profiles: ["gpu-nvidia"]
+    container_name: ${PROJECT_NAME}_ollama_pull
+    image: ollama/ollama:latest
+    restart: no
+    environment:
+      - MODELS_TO_PULL
+    volumes:
+      - ollama_storage:/root/.ollama
+    entrypoint: /bin/sh
+    command:
+      - "-c"
+      - "sleep 3; for MODEL in $(echo $MODELS_TO_PULL | tr ',' ' '); do ollama pull $MODEL; done"
+    depends_on:
+      - ollama-gpu
 
 volumes:
   uploads:
@@ -170,13 +184,6 @@ volumes:
       type: none
       o: bind
       device: ./uploads
-  scripts:
-    name: ${PROJECT_NAME}_scripts
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./scripts
   persistent_workflows:
     name: ${PROJECT_NAME}_persistent_workflows
     driver: local
