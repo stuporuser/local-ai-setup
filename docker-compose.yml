@@ -152,10 +152,10 @@ services:
       - MODELS_TO_PULL
     volumes:
       - ollama_storage:/root/.ollama
-    entrypoint: /bin/sh
+    entrypoint: /bin/bash
     command:
       - "-c"
-      - "sleep 3; echo $MODELS_TO_PULL; for MODEL in $(echo $MODELS_TO_PULL | tr ',' ' '); do echo $MODEL; ollama pull $MODEL; done"
+      - "sleep 15; read -r -a MODEL_ARRAY <<< `echo $$MODELS_TO_PULL | /usr/bin/tr ',' ' '`; for MODEL in $${MODEL_ARRAY[@]}; do echo $$MODEL; OLLAMA_HOST=host.docker.internal:11434 ollama pull $$MODEL; done"
     depends_on:
       - ollama-cpu
 
@@ -169,10 +169,10 @@ services:
       - MODELS_TO_PULL
     volumes:
       - ollama_storage:/root/.ollama
-    entrypoint: /bin/sh
+    entrypoint: /bin/bash
     command:
       - "-c"
-      - "sleep 3; echo $MODELS_TO_PULL; for MODEL in $(echo $MODELS_TO_PULL | tr ',' ' '); do echo $MODEL; ollama pull $MODEL; done"
+      - "sleep 15; read -r -a MODEL_ARRAY <<< `echo $$MODELS_TO_PULL | /usr/bin/tr ',' ' '`; for MODEL in $${MODEL_ARRAY[@]}; do echo $$MODEL; OLLAMA_HOST=host.docker.internal:11434 ollama pull $$MODEL; done"
     depends_on:
       - ollama-gpu
 
