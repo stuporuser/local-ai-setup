@@ -177,6 +177,7 @@ cython_debug/
 
 # Project-specific dirs and files
 uploads/*
+container_dirs/backup_dirs/*
 container_dirs/n8n_storage/*
 container_dirs/postgres_storage/*
 container_dirs/ollama_storage/*
