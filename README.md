@@ -37,7 +37,10 @@ cd new-test-project
 git clone https://github.com/stuporuser/local-ai-setup.git
 cd local-ai-setup
 copy .env.example .env
+del container_dirs/postgres_storage/.gitkeep
 ```
+
+(Deleting the .gitkeep file in the single directory above is a temporary workaround: if I don't include the postgres_storage dir, then docker compose will throw errors on Linux when attempting to mount it, but postgres doesn't like that the dir isn't empty.)
 
 Now edit `.env`. ***At the very least, ensure that you provide a unique project id!***
 
