@@ -1,3 +1,7 @@
+
+name: ${PROJECT_NAME}
+
+
 x-defaults: &defaults
   networks:
     - project_network
@@ -7,121 +11,13 @@ x-defaults: &defaults
   
 
 services:
-  flowise:
-    <<: [*defaults]
-    container_name: ${PROJECT_NAME}_flowise
-    image: flowiseai/flowise
-    volumes:
-      - flowise_storage:/root/.flowise
-    ports:
-        - 3001:3001
-    environment:
-        - PORT=3001
-    entrypoint: /bin/sh
-    command:
-      - "-c"
-      - "sleep 3; flowise start"
-
-  open-webui:
-    <<: [*defaults]
-    container_name: ${PROJECT_NAME}_open_webui
-    image: ghcr.io/open-webui/open-webui:main
-    volumes:
-      - open_webui_storage:/app/backend/data
-    ports:
-      - 3000:8080
-    environment:
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434
-
-  postgres:
-    <<: [*defaults]
-    container_name: ${PROJECT_NAME}_postgres
-    image: postgres:16-alpine
-    ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
-    volumes:
-      - postgres_storage:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  n8n-import:
-    <<: [*defaults]
-    container_name: ${PROJECT_NAME}_n8n_import
-    image: n8nio/n8n:latest
-    restart: no
-    environment:
-      - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=postgres
-      - DB_POSTGRESDB_USER=${POSTGRES_USER}
-      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
-      - N8N_DIAGNOSTICS_ENABLED=false
-      - N8N_PERSONALIZATION_ENABLED=false
-      - N8N_ENCRYPTION_KEY
-      - N8N_USER_MANAGEMENT_JWT_SECRET
-    links:
-      - postgres
-    volumes:
-      - uploads:/uploads
-      - persistent_workflows:/persistent_workflows
-      - n8n_storage:/home/node/.n8n
-    depends_on:
-      postgres:
-        condition: service_healthy
-    entrypoint: /bin/sh
-    command:
-      - "-c"
-      - "n8n import:workflow --separate --input=/persistent_workflows/"
-
-  n8n:
-    <<: [*defaults]
-    container_name: ${PROJECT_NAME}_n8n
-    image: n8nio/n8n:latest
-    ports:
-      - 5678:5678
-    environment:
-      - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=postgres
-      - DB_POSTGRESDB_USER=${POSTGRES_USER}
-      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
-      - N8N_DIAGNOSTICS_ENABLED=false
-      - N8N_PERSONALIZATION_ENABLED=false
-      - N8N_ENCRYPTION_KEY
-      - N8N_USER_MANAGEMENT_JWT_SECRET
-    links:
-      - postgres
-    volumes:
-      - uploads:/uploads
-      - persistent_workflows:/persistent_workflows
-      - n8n_storage:/home/node/.n8n
-    depends_on:
-      postgres:
-        condition: service_healthy
-      n8n-import:
-        condition: service_completed_successfully
-
-  qdrant:
-    <<: [*defaults]
-    container_name: ${PROJECT_NAME}_qdrant
-    image: qdrant/qdrant
-    ports:
-      - 6333:6333
-    volumes:
-      - qdrant_storage:/qdrant/storage
-
   ollama-cpu:
     <<: [*defaults]
     profiles: ["cpu"]
     container_name: ${PROJECT_NAME}_ollama
     image: ollama/ollama:latest
     ports:
-      - 11434:11434
+      - ${OLLAMA_PORT_HOST}:${OLLAMA_PORT_CONT}
     volumes:
       - ollama_storage:/root/.ollama
 
@@ -131,7 +27,7 @@ services:
     container_name: ${PROJECT_NAME}_ollama
     image: ollama/ollama:latest
     ports:
-      - 11434:11434
+      - ${OLLAMA_PORT_HOST}:${OLLAMA_PORT_CONT}
     volumes:
       - ollama_storage:/root/.ollama
     deploy:
@@ -157,7 +53,8 @@ services:
       - "-c"
       - "sleep 5; read -r -a MODEL_ARRAY <<< `echo $$MODELS_TO_PULL | /usr/bin/tr ',' ' '`; for MODEL in $${MODEL_ARRAY[@]}; do echo $$MODEL; sleep 3; OLLAMA_HOST=host.docker.internal:11434 ollama pull $$MODEL; done"
     depends_on:
-      - ollama-cpu
+      ollama-cpu:
+        condition: service_started
 
   ollama-pull-llama-gpu:
     <<: [*defaults]
@@ -174,8 +71,126 @@ services:
       - "-c"
       - "sleep 5; read -r -a MODEL_ARRAY <<< `echo $$MODELS_TO_PULL | /usr/bin/tr ',' ' '`; for MODEL in $${MODEL_ARRAY[@]}; do echo $$MODEL; sleep 3; OLLAMA_HOST=host.docker.internal:11434 ollama pull $$MODEL; done"
     depends_on:
-      - ollama-gpu
+      ollama-gpu:
+        condition: service_started
 
+  open-webui:
+    <<: [*defaults]
+    profiles:
+      - ${DISABLE_OPEN_WEBUI:-}
+    container_name: ${PROJECT_NAME}_open_webui
+    image: ghcr.io/open-webui/open-webui:main
+    volumes:
+      - open_webui_storage:/app/backend/data
+    ports:
+      - ${OPEN_WEBUI_PORT_HOST}:${OPEN_WEBUI_PORT_CONT}
+    environment:
+      - OLLAMA_BASE_URL=${OLLAMA_HOST}:${OLLAMA_PORT_HOST}
+  
+  n8n-import:
+    <<: [*defaults]
+    profiles:
+      - ${DISABLE_N8N:-}
+    container_name: ${PROJECT_NAME}_n8n_import
+    image: n8nio/n8n:latest
+    restart: no
+    environment:
+      - DB_TYPE=${DB_TYPE}
+      - DB_POSTGRESDB_HOST=${DB_HOST}
+      - DB_POSTGRESDB_USER=${DB_USER}
+      - DB_POSTGRESDB_PASSWORD=${DB_PASSWORD}
+      - N8N_DIAGNOSTICS_ENABLED
+      - N8N_PERSONALIZATION_ENABLED
+      - N8N_ENCRYPTION_KEY
+      - N8N_USER_MANAGEMENT_JWT_SECRET
+    volumes:
+      - uploads:/uploads
+      - persistent_workflows:/persistent_workflows
+      - n8n_storage:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: /bin/sh
+    command:
+      - "-c"
+      - "n8n import:workflow --separate --input=/persistent_workflows/"
+
+  n8n:
+    <<: [*defaults]
+    profiles:
+      - ${DISABLE_N8N:-}
+    container_name: ${PROJECT_NAME}_n8n
+    image: n8nio/n8n:latest
+    ports:
+      - ${N8N_PORT_HOST}:${N8N_PORT_CONT}
+    environment:
+      - DB_TYPE=${DB_TYPE}
+      - DB_POSTGRESDB_HOST=${DB_HOST}
+      - DB_POSTGRESDB_USER=${DB_USER}
+      - DB_POSTGRESDB_PASSWORD=${DB_PASSWORD}
+      - N8N_DIAGNOSTICS_ENABLED
+      - N8N_PERSONALIZATION_ENABLED
+      - N8N_ENCRYPTION_KEY
+      - N8N_USER_MANAGEMENT_JWT_SECRET
+    volumes:
+      - uploads:/uploads
+      - persistent_workflows:/persistent_workflows
+      - n8n_storage:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+      n8n-import:
+        condition: service_completed_successfully
+
+  postgres:
+    <<: [*defaults]
+    profiles:
+      - ${DISABLE_POSTGRES:-}
+    container_name: ${PROJECT_NAME}_postgres
+    image: postgres:16-alpine
+    ports:
+      - ${DB_PORT_HOST}:${DB_PORT_CONT}
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
+    volumes:
+      - postgres_storage:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h localhost -U ${DB_USER} -d ${DB_DATABASE}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  qdrant:
+    <<: [*defaults]
+    profiles:
+      - ${DISABLE_QDRANT:-}
+    container_name: ${PROJECT_NAME}_qdrant
+    image: qdrant/qdrant
+    ports:
+      - ${QDRANT_PORT_HOST}:${QDRANT_PORT_CONT}
+    volumes:
+      - qdrant_storage:/qdrant/storage
+
+  flowise:
+    <<: [*defaults]
+    profiles:
+      - ${DISABLE_FLOWISE:-}
+    container_name: ${PROJECT_NAME}_flowise
+    image: flowiseai/flowise
+    volumes:
+      - flowise_storage:/root/.flowise
+    ports:
+        - ${FLOWISE_PORT_HOST}:${FLOWISE_PORT_CONT}
+    environment:
+        - PORT=${FLOWISE_PORT_CONT}
+    entrypoint: /bin/sh
+    command:
+      - "-c"
+      - "sleep 3; flowise start"
+
+  
 volumes:
   uploads:
     name: ${PROJECT_NAME}_uploads

@@ -45,17 +45,56 @@ Now edit `.env`. ***At the very least, ensure that you provide a unique project 
 
 **Note:** This runs the containers as daemons, separate from the terminal window. See the section `(*) Other commands` for additional interaction with containers. Omit `-d` to keep the containers running live inside the terminal (in such case, `CTRL`+`C` will kill them).
 
-Open an elevated prompt and:
+### GPU vs. CPU vs. no Ollama
+
+If you have an Nvidia GPU, use its profile:
 
 ```
 docker compose --profile gpu-nvidia up -d
 ```
 
-or 
+Otherwise, use your CPU (very slow):
 
 ```
 docker compose --profile cpu up -d
 ```
+
+Ollama is the service that downloads and runs AI models. Unless you are using an external API, such as OpenAI's API, you'll need an Ollama instance running somewhere. (Technically, you could use another engine, but let's stick with Ollama for this doc.) This project is designed for you to run Ollama locally, but you can use the no-Ollama option below to prevent Ollama from running locally. If you do so, ensure that you update the .env file with the host/address of the Ollama service you're running elsewhere.
+
+To run this project without the local Ollama service, edit the .env file to point to your remote Ollama service and run:
+
+```
+docker compose up -d
+```
+
+### Services
+
+This project comprises the following services and their associated service names:
+- Required back-end services:
+  - Ollama
+- Optional front-end services:
+  - Open WebUI (recommended interface to Ollama)
+  - n8n
+  - Flowise
+- Back-end support services:
+  - PostgreSQL (as a dependency of n8n)
+  - Qdrant (for RAG)
+
+To run them all, simply run:
+
+```
+docker compose --profile {gpu-nvidia|cpu} up -d
+```
+
+In Linux or in Bash on Windows, to prevent any service other than Ollama from running, prepend your `docker compose up -d` command with one or more of the following variable definitions. Keep the variable definitions and the command all on the same line, separated by spaces.
+
+- `DISABLE_OPEN_WEBUI=true`
+- `DISABLE_N8N=true`
+- `DISABLE_POSTGRES=true`
+- `DISABLE_QDRANT=true`
+- `DISABLE_FLOWISE=true`
+
+In more complex setups, you might run Ollama on 
 
 ## (3) Set up Open WebUI
 
