@@ -94,8 +94,6 @@ In Linux or in Bash on Windows, to prevent any service other than Ollama from ru
 - `DISABLE_QDRANT=true`
 - `DISABLE_FLOWISE=true`
 
-In more complex setups, you might run Ollama on 
-
 ## (3) Set up Open WebUI
 
 - Browse to http://localhost:3000/. Enter any name, email, and password--these are local only.
