@@ -103,6 +103,7 @@ services:
       - N8N_PERSONALIZATION_ENABLED
       - N8N_ENCRYPTION_KEY
       - N8N_USER_MANAGEMENT_JWT_SECRET
+      - N8N_SECURE_COOKIE
     volumes:
       - uploads:/uploads
       - persistent_workflows:/persistent_workflows
@@ -132,6 +133,7 @@ services:
       - N8N_PERSONALIZATION_ENABLED
       - N8N_ENCRYPTION_KEY
       - N8N_USER_MANAGEMENT_JWT_SECRET
+      - N8N_SECURE_COOKIE
     volumes:
       - uploads:/uploads
       - persistent_workflows:/persistent_workflows
